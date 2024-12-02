@@ -1,0 +1,414 @@
+EX280
+Exam Prep
+-------------
+
+Q1. Configure the Identity Provider for the Openshift
+
+Create the user account collins with password culverins    
+Create the user account adlerin with password artiste    
+Create the user account armstrong with password spacesuits    
+Solutions:
+
+Create an htpasswd file to store the user and password information.    
+Bash
+$ htpasswd -c -b -B htpassfile jobs deluges  
+$ htpasswd -bB htpassfile wozniak grannies  
+$ htpasswd -bB htpassfile collins culverins  
+$ htpasswd -bB htpassfile adlerin artiste  
+$ htpasswd -bB htpassfile armstrong spacesuits  
+Use code with caution.
+
+Create a Secret object in Openshift that contains the htpasswd users.    
+Bash
+$ oc create secret generic htpass-idp-ex280 --from-file htpasswd=htpassfile -n openshift-config  
+Use code with caution.
+
+Configure the OAuth cluster object to use the HTPasswd identity provider.    
+Bash
+$ oc get -o yaml oauth cluster > oauth.yaml
+$ vim oauth.yaml  # Add the htpasswd identity provider configuration  
+$ oc replace -f /tmp/oauth.yaml  
+Use code with caution.
+
+Verify that users can log in with the new credentials.
+Bash
+$ oc login -u jobs -p deluges  
+$ oc whoami  
+$ oc logout  
+Use code with caution.
+
+Q2. Configure Cluster permissions
+
+User jobs is able to modify the cluster
+wozniak is able to create project    
+armstrong cannot create projects    
+Remove the kubeadmin user from the cluster
+Solutions:
+
+Add the cluster-admin role to the jobs user.
+Bash
+$ oc adm policy add-cluster-role-to-user cluster-admin jobs  
+Use code with caution.
+
+Add the self-provisioner role to the wozniak user.
+Bash
+$ oc adm policy add-cluster-role-to-user self-provisioner wozniak  
+Use code with caution.
+
+Remove the self-provisioner role from the system:authenticated:oauth group.
+Bash
+$ oc adm policy remove-cluster-role-from-group self-provisioner system:authenticated:oauth  
+Use code with caution.
+
+Verify that armstrong cannot create projects.
+Bash
+$ oc login -u armstrong -p spacesuits  
+$ oc new-project test  # Should fail  
+Use code with caution.
+
+Delete the kubeadmin user secret.
+Bash
+$ oc delete secrets kubeadmin -n kube-system  
+Use code with caution.
+
+Q3. Configure Project Permissions
+
+Create the following projects: apollo, titan, gemini, bluebook, apache
+User armstrong is admin for the apollo and titan project
+User collins is able to view the apollo project
+Solutions:
+
+Create the projects using the oc new-project command.
+Bash
+$ oc new-project apollo  
+$ oc new-project titan  
+$ oc new-project gemini  
+$ oc new-project bluebook  
+$ oc new-project apache  
+Use code with caution.
+
+Add the admin role to armstrong for the apollo and titan projects.
+Bash
+$ oc policy add-role-to-user admin armstrong -n apollo  
+$ oc policy add-role-to-user admin armstrong -n titan  
+Use code with caution.
+
+Add the view role to collins for the apollo project.
+Bash
+$ oc policy add-role-to-user view collins -n apollo  
+Use code with caution.
+
+Q4. Configure Groups and configure permissions
+
+The user account armstrong is a member of the commander group
+The user account collins is a member of the pilot group
+The user account alderin is a member of the pilot group   
+Member of the commander group have edit permissions in the apollo project.
+Member of the pilot group have view permissions in the apollo project.
+Solutions:
+
+Create the commander and pilot groups using the oc adm groups new command.
+Bash
+$ oc adm groups new commander  
+$ oc adm groups new pilot  
+Use code with caution.
+
+Add the users to the groups using the oc adm groups add-users command.
+Bash
+$ oc adm groups add-users commander armstrong  
+$ oc adm groups add-users pilot adlerin  
+$ oc adm groups add-users pilot collins  
+Use code with caution.
+
+Add the edit role to the commander group for the apollo project.
+Bash
+$ oc policy add-role-to-group edit commander -n apollo  
+Use code with caution.
+
+Add the view role to the pilot group for the apollo project.
+Bash
+$ oc policy add-role-to-group view pilot -n apollo
+Use code with caution.
+
+Q5. Configure Quotas for the Project
+
+Create ResourceQuota in the apache project named ex280-quota
+The amount of memory consumed across all containers may not exceed 1Gi
+The amount of CPU across all containers may not exceed 2 full cores.
+The maximum number of replication controllers does not exceed 3
+The maximum number of pods does not exceed 3
+The maximum number of services does not exceed 6   
+Solutions:
+
+Create the ResourceQuota object using the oc create quota command with the specified limits.
+Bash
+$ oc project apache  
+$ oc create quota ex280-quota --hard memory=1Gi,cpu=2,replicationcontrollers=3,pods=3,services=6  
+Use code with caution.
+
+Q6. Scale the Application manually
+
+Scale an application called hydra in the project called lerna to five times.
+Solutions:
+
+Use the oc scale command to scale the hydra application to 5 replicas.
+Bash
+$ oc project lerna  
+$ oc scale --replicas=5 dc/hydra  
+Use code with caution.
+
+Q7. Scale an Application Automatically
+
+Configure an autoscaling for the scale application in the project gru with the following specification:
+Minimum number of replicas: 6
+Maximum number of replicas: 40
+Threshold CPU-Percentage: 60
+Application resource of CPU Request: 25m
+Application limits of CPU Limits: 100m
+Solutions:
+
+Use the oc autoscale command to configure the autoscaler with the specified parameters.
+Bash
+$ oc project gru  
+$ oc autoscale --min=6 --max=40 --cpu-percent=60 dc/scale  
+Use code with caution.
+
+Use the oc set resources command to set the CPU requests and limits for the application.
+Bash
+$ oc set resources --requests=cpu=25m --limits=cpu=100m dc/scala  
+Use code with caution.
+
+Q8. Configure and deploy a secure route
+
+Deploy an application called oxcart securely in the project called area51
+The application has a self-signed certificate available at the specified path.
+Use the newcert command to generate the required TLS objects.
+The application should be reachable at the following URL: https://classfication-oxcart.apps.ocp4.example.com
+Application produces a valid Output
+Solutions:
+
+Create a secure route using the oc create route command with the self-signed certificate.
+Bash
+$ oc project area51  
+$ newcert "/C=US/ST=NC/L=Raleigh/O=RedHat/OU=RHT/CN=oxcart.apps.ocp4.example.com"  
+$ oc create route edge --service=oxcart --cert=apps-crc.testing.crt --key=apps-crc.testing.key --hostname=oxcart.apps.ocp4.example.com  
+Use code with caution.
+
+Q9. Deploy an application
+
+Deploy the chart named redhat-movie in the project ascii-hall from the repository http://helm.domain.23.example.com/charts/
+You may use telnet or nc command to validate the deployment
+Solutions:
+
+Add the Helm repository using the helm repo add command.
+Bash
+$ oc project ascii-hall  
+$ helm repo add do280-repo http://helm.domain.23.example.com/charts/  
+Use code with caution.
+
+Install the chart using the helm install command.
+Bash
+$ helm install redhat-movie do280-repo/redhat-movie  
+Use code with caution.
+
+Q10. Configure a Secret
+
+Configure a secret in the math project and the name of the secret should be magic.
+The secret key value pairs: Decoder_Ring: ASDA142hfh-gfrhhueo-erfdk345v
+Solutions:
+
+Create the secret using the oc create secret command with the key-value pair.
+Bash
+$ oc create secret generic magic --from-literal=Decoder_Ring=ASDA142hfh-gfrhhueo-erfdk345v  
+Use code with caution.
+
+Q11. Configure Application to use a Secret
+
+Configure the environmental variable for the application called qed in the math project so that it uses the secret "magic"
+After configuring the environmental value for the application, it should stop producing the following output: "App is not configured properly"
+Solutions:
+
+Set the environment variable for the application using the oc set env command.
+Bash
+$ oc set env --from=secret/magic dc/qed  
+Use code with caution.
+
+Q12. Create a service account
+
+Create a service account called ex280-sa in the project called apples. This service account should be able to run an application with any user id.
+Solutions:
+
+Create the service account using the oc create serviceaccount command.
+Bash
+$ oc project apples  
+$ oc create serviceaccount ex280-sa  
+Use code with caution.
+
+Add the anyuid SCC to the service account using the oc adm policy add-scc-to-user command.
+Bash
+$ oc adm policy add-scc-to-user anyuid -z ex280-sa  
+Use code with caution.
+
+Q13. Deploy an application
+
+Deploy an application called oranges in the project called apples
+This application should use the service account ex280-sa
+The Application should produce a valid output
+Solutions:
+
+Set the service account for the deployment using the oc set serviceaccount command.
+Bash
+$ oc set serviceaccount dc/oranges ex280-sa  
+Use code with caution.
+
+Q14. Deploy an Application
+
+Nothing should be deleted and added
+Application should produce output
+Solutions:
+
+Remove the resources section from the deployment configuration.
+Bash
+$ oc edit dc mercury  # Remove the resources section  
+Use code with caution.
+
+Q15. Configure a Network Policy
+
+Configure a network policy using database and checker project with the following requirements:
+The database project has a network policy with the name db-allow-mysql-comm based on pod selector label network.openshift.io/policy-group.
+Communications to the database project are restricted to deployments from the checker projects.
+The network policy is filtered by project selector using the team=devsecops label and pod checker using the deployment=web-mysql label.
+The application can establish a connections to port 3304/TCP.
+You can check the checker project.
+Solutions:
+
+Create a NetworkPolicy object with the specified rules and filters.
+Bash
+$ oc project database  
+$ vim policy.yml  # Add the NetworkPolicy configuration  
+$ oc create -f policy.yml  
+Use code with caution.
+
+Q16. Configure a project template
+
+Configure your OpenShift cluster so that new projects are created with a limit using the following requirements:
+The name of the limit range is PROJECT_NAME-limits where PROJECT_NAME is the name of the project created using oc new-project.
+The amount of memory consumed by a single container is between 128Mi and 1Gi with a default of 512Mi and a default request of 256Mi.
+Solutions:
+
+Create a LimitRange object and add it to the project template.
+Bash
+$ oc adm create-bootstrap-project-template -o yaml > template.yaml  
+$ vim limit.yml  # Add the LimitRange configuration  
+$ vim template.yaml  # Add the LimitRange object to the template  
+$ oc create -f template.yaml -n openshift-config  
+Use code with caution.
+
+Q17. Install Operator
+
+Install the file-intergrity operator with the following requirements:
+The operator installed in the openshift-file-integrity project.
+The approval strategy is Automatic.
+Solutions:
+
+Install the operator using the OperatorHub and configure it to use Automatic approval strategy. (Refer to the screenshots in the original document for visual guidance.)
+Q18. Cronjob
+
+Create a cron job using the image at registry.domain12.example.com/library/job-r with the following facilities:
+The cron job name is job-rusner.
+The cron job run at 04:05 on the 2nd day of every month.
+The successed job history limit in 14.
+The service account and service account name is magna.
+The cron job runs in the project called elemtum.
+Solutions:
+
+Create the cron job using the oc create cronjob command with the specified parameters.
+Bash
+$ oc new-project elemtum  
+$ oc create cronjob job-rusner --image=registry.domain12.example.com/library/job-runner:latest --schedule='5 4 2 * *'  
+Use code with caution.
+
+Set the service account for the cronjob.
+Bash
+$ oc create serviceaccount magna  
+$ oc adm policy add-cluster-role-to-user cluster-admin -z magna  
+$ oc set sa cronjob.batch/job-rusner magna  
+Use code with caution.
+
+Q19. Collect cluster Information for Red Hat support
+
+Collect the default support information for your OpenShift cluster with the following requirements:
+The data is stored as a compressed tar archive using tar cvaf.
+The name of the comporessed tar archive is: ex280-ocp.clusterID.tar.gz.
+where clusterID is the unique identifier of your Openshift cluster.
+This archive bas been uploading for grading.
+A utility script has been provided for you to upload the archive as follow: /usr/local/bin/upload-cluster-data ex280-ocp-clusterID.tar.gz.
+You may upload the archive as many times as necessary.
+Each upload archive will overwrite any previously uploaded.
+Solutions:
+
+Use the oc adm must-gather command to collect the cluster information.
+Bash
+$ oc adm must-gather --dest-dir=ex280-ocp  
+Use code with caution.
+
+Create the compressed tar archive.
+Bash
+$ oc describe clusterversion  # Get the cluster ID  
+$ tar -cvaf ex280-ocp-clusterID.tar.gz ex280-ocp  
+Use code with caution.
+
+Upload the archive using the provided script.
+Bash
+$ /usr/local/bin/upload-cluster-data ex280-ocp-clusterID.tar.gz  
+Use code with caution.
+
+Q20. Persistent storage
+
+Configure a persistent volume with the following requirements:
+Name: landing-pv
+The access mode is ReadWriteMany
+Size: 1Gi
+The reclaim policy matches the storage class
+Configure a persistent volume claim with the following requirements:
+Name: landing-pvc
+The access mode is the same as the persistent volume
+The size is the same as the persistent volume
+Deploy the application with the following requirements:
+The application exists in a project called page
+The application uses a deployment called landing
+The application uses the images located at registry.domin12.example.com/nginxinc/nginx-unprivileged:latest
+The nginx mountpoint in /usr/share/nginx/html
+The application uses 3 pods
+The application is accessible at the specified URL
+Solutions:
+
+Configure the persistent volume.
+Bash
+$ oc new-project page  
+$ vim pv.yaml  # Add the PersistentVolume configuration  
+$ oc create -f pv.yaml  
+Use code with caution.
+
+Configure the persistent volume claim.
+Bash
+$ vim pvc.yaml  # Add the PersistentVolumeClaim configuration  
+$ oc create -f pvc.yaml  
+Use code with caution.
+
+Deploy the application.
+Bash
+$ oc new-app --name=landing --image=registry.domin12.example.com/nginxinc/nginx-unprivileged:latest  
+$ oc edit deploy/landing  # Add the volume mounts and volumes  
+Use code with caution.
+
+Q21. Configure a health probe
+
+An application named atlas has been deployed with a single container is the master project.
+Implement a liveness probe for this container that exec following requirements:
+The probe monitors liveness by performing a TCP socket check on port 8080
+The probe has an initial delay of 10 second and a timeout of 30 second
+Your changes can survive a rebuild
+Solutions:
+
+Set the
