@@ -11,11 +11,11 @@ Solutions:
 
 Create an htpasswd file to store the user and password information.    
 ```bash
-$ htpasswd -c -b -B htpassfile jobs deluges  
-$ htpasswd -bB htpassfile wozniak grannies  
-$ htpasswd -bB htpassfile collins culverins  
-$ htpasswd -bB htpassfile adlerin artiste  
-$ htpasswd -bB htpassfile armstrong spacesuits  
+  $ htpasswd -c -b -B htpassfile jobs deluges  
+  $ htpasswd -bB htpassfile wozniak grannies  
+  $ htpasswd -bB htpassfile collins culverins  
+  $ htpasswd -bB htpassfile adlerin artiste  
+  $ htpasswd -bB htpassfile armstrong spacesuits  
 ```
 
 Create a Secret object in Openshift that contains the htpasswd users.    
