@@ -1,420 +1,442 @@
-EX280
-Exam Prep
--------------
+Markdown
+# OpenShift Cluster Configuration Guide
 
-Q1. Configure the Identity Provider for the Openshift
+This guide outlines the steps to configure an OpenShift cluster, including user management, permissions, resource quotas, scaling, security, and application deployment.
 
-Create the user account collins with password culverins    
-Create the user account adlerin with password artiste    
-Create the user account armstrong with password spacesuits    
-Solutions:
+## Table of Contents
 
-Create an htpasswd file to store the user and password information.    
-```bash
-  $ htpasswd -c -b -B htpassfile jobs deluges  
-  $ htpasswd -bB htpassfile wozniak grannies  
-  $ htpasswd -bB htpassfile collins culverins  
-  $ htpasswd -bB htpassfile adlerin artiste  
-  $ htpasswd -bB htpassfile armstrong spacesuits  
-```
+1. [Configure Identity Provider](#configure-identity-provider)
+2. [Configure Cluster Permissions](#configure-cluster-permissions)
+3. [Configure Project Permissions](#configure-project-permissions)
+4. [Configure Groups and Permissions](#configure-groups-and-permissions)
+5. [Configure Quotas for the Project](#configure-quotas-for-the-project)
+6. [Scale the Application Manually](#scale-the-application-manually)
+7. [Scale an Application Automatically](#scale-an-application-automatically)
+8. [Configure and Deploy a Secure Route](#configure-and-deploy-a-secure-route)
+9. [Deploy an Application (Helm)](#deploy-an-application-helm)
+10. [Configure a Secret](#configure-a-secret)
+11. [Configure Application to Use a Secret](#configure-application-to-use-a-secret)
+12. [Create a Service Account](#create-a-service-account)
+13. [Deploy an Application (with Service Account)](#deploy-an-application-with-service-account)
+14. [Deploy an Application (Troubleshooting)](#deploy-an-application-troubleshooting)
+15. [Configure a Network Policy](#configure-a-network-policy)
+16. [Configure a Project Template](#configure-a-project-template)
+17. [Install Operator](#install-operator)
+18. [Cronjob](#cronjob)
+19. [Collect Cluster Information for Red Hat Support](#collect-cluster-information-for-red-hat-support)
+20. [Persistent Storage](#persistent-storage)
+21. [Configure a Health Probe](#configure-a-health-probe)
 
-Create a Secret object in Openshift that contains the htpasswd users.    
-Bash
-$ oc create secret generic htpass-idp-ex280 --from-file htpasswd=htpassfile -n openshift-config  
+## Configure Identity Provider
+
+* Create user accounts with passwords:
+    * `collins` with password `culverins`
+    * `adlerin` with password `artiste`
+    * `armstrong` with password `spacesuits`
+
+**Steps:**
+
+1. Create an htpasswd file:
+   ```bash
+   htpasswd -c -b -B htpassfile jobs deluges
+   htpasswd -bB htpassfile wozniak grannies
+   htpasswd -bB htpassfile collins culverins
+   htpasswd -bB htpassfile adlerin artiste
+   htpasswd -bB htpassfile armstrong spacesuits
 Use code with caution.
 
-Configure the OAuth cluster object to use the HTPasswd identity provider.    
+Create a Secret object:
+
 Bash
-$ oc get -o yaml oauth cluster > oauth.yaml
-$ vim oauth.yaml  # Add the htpasswd identity provider configuration  
-$ oc replace -f /tmp/oauth.yaml  
+oc create secret generic htpass-idp-ex280 --from-file htpasswd=htpassfile -n openshift-config
 Use code with caution.
 
-Verify that users can log in with the new credentials.
+Configure OAuth:
+
 Bash
-$ oc login -u jobs -p deluges  
-$ oc whoami  
-$ oc logout  
+oc get -o yaml oauth cluster > oauth.yaml
+# Edit oauth.yaml to add htpasswd identity provider configuration
+oc replace -f oauth.yaml
 Use code with caution.
 
-Q2. Configure Cluster permissions
+Verify login:
 
-User jobs is able to modify the cluster
-wozniak is able to create project    
-armstrong cannot create projects    
-Remove the kubeadmin user from the cluster
-Solutions:
-
-Add the cluster-admin role to the jobs user.
 Bash
-$ oc adm policy add-cluster-role-to-user cluster-admin jobs  
+oc login -u <username> -p <password>
+oc whoami
+oc logout
 Use code with caution.
 
-Add the self-provisioner role to the wozniak user.
+Configure Cluster Permissions
+Grant jobs user cluster modification permissions.
+Grant wozniak user project creation permissions.
+Prevent armstrong from creating projects.
+Remove the kubeadmin user.
+Steps:
+
+Grant permissions to jobs:
+
 Bash
-$ oc adm policy add-cluster-role-to-user self-provisioner wozniak  
+oc adm policy add-cluster-role-to-user cluster-admin jobs
 Use code with caution.
 
-Remove the self-provisioner role from the system:authenticated:oauth group.
+Grant permissions to wozniak:
+
 Bash
-$ oc adm policy remove-cluster-role-from-group self-provisioner system:authenticated:oauth  
+oc adm policy add-cluster-role-to-user self-provisioner wozniak
 Use code with caution.
 
-Verify that armstrong cannot create projects.
+Restrict armstrong:
+
 Bash
-$ oc login -u armstrong -p spacesuits  
-$ oc new-project test  # Should fail  
+oc adm policy remove-cluster-role-from-group self-provisioner system:authenticated:oauth
 Use code with caution.
 
-Delete the kubeadmin user secret.
+Remove kubeadmin:
+
 Bash
-$ oc delete secrets kubeadmin -n kube-system  
+oc delete secrets kubeadmin -n kube-system
 Use code with caution.
 
-Q3. Configure Project Permissions
+Configure Project Permissions
+Create projects: apollo, titan, gemini, bluebook, apache.
+Grant armstrong admin access to apollo and titan.
+Grant collins view access to apollo.
+Steps:
 
-Create the following projects: apollo, titan, gemini, bluebook, apache
-User armstrong is admin for the apollo and titan project
-User collins is able to view the apollo project
-Solutions:
+Create projects:
 
-Create the projects using the oc new-project command.
 Bash
-$ oc new-project apollo  
-$ oc new-project titan  
-$ oc new-project gemini  
-$ oc new-project bluebook  
-$ oc new-project apache  
+oc new-project apollo
+oc new-project titan
+oc new-project gemini
+oc new-project bluebook
+oc new-project apache
 Use code with caution.
 
-Add the admin role to armstrong for the apollo and titan projects.
+Grant admin access:
+
 Bash
-$ oc policy add-role-to-user admin armstrong -n apollo  
-$ oc policy add-role-to-user admin armstrong -n titan  
+oc policy add-role-to-user admin armstrong -n apollo
+oc policy add-role-to-user admin armstrong -n titan
 Use code with caution.
 
-Add the view role to collins for the apollo project.
+Grant view access:
+
 Bash
-$ oc policy add-role-to-user view collins -n apollo  
+oc policy add-role-to-user view collins -n apollo
 Use code with caution.
 
-Q4. Configure Groups and configure permissions
+Configure Groups and Permissions
+Create groups: commander, pilot.
+Add armstrong to commander.
+Add collins and alderin to pilot.
+Grant commander edit access to apollo.
+Grant pilot view access to apollo.
+Steps:
 
-The user account armstrong is a member of the commander group
-The user account collins is a member of the pilot group
-The user account alderin is a member of the pilot group   
-Member of the commander group have edit permissions in the apollo project.
-Member of the pilot group have view permissions in the apollo project.
-Solutions:
+Create groups:
 
-Create the commander and pilot groups using the oc adm groups new command.
 Bash
-$ oc adm groups new commander  
-$ oc adm groups new pilot  
+oc adm groups new commander
+oc adm groups new pilot
 Use code with caution.
 
-Add the users to the groups using the oc adm groups add-users command.
+Add users to groups:
+
 Bash
-$ oc adm groups add-users commander armstrong  
-$ oc adm groups add-users pilot adlerin  
-$ oc adm groups add-users pilot collins  
+oc adm groups add-users commander armstrong
+oc adm groups add-users pilot collins
+oc adm groups add-users pilot adlerin
 Use code with caution.
 
-Add the edit role to the commander group for the apollo project.
+Grant group permissions:
+
 Bash
-$ oc policy add-role-to-group edit commander -n apollo  
+oc policy add-role-to-group edit commander -n apollo
+oc policy add-role-to-group view pilot -n apollo
 Use code with caution.
 
-Add the view role to the pilot group for the apollo project.
+Configure Quotas for the Project
+Create ResourceQuota in apache project named ex280-quota:
+Memory limit: 1Gi
+CPU limit: 2 cores
+Replication controllers limit: 3
+Pods limit: 3
+Services limit: 6
+Steps:
+
+Create ResourceQuota:
 Bash
-$ oc policy add-role-to-group view pilot -n apollo
+oc project apache
+oc create quota ex280-quota --hard memory=1Gi,cpu=2,replicationcontrollers=3,pods=3,services=6
 Use code with caution.
 
-Q5. Configure Quotas for the Project
+Scale the Application Manually
+Scale the hydra application in the lerna project to 5 replicas.
+Steps:
 
-Create ResourceQuota in the apache project named ex280-quota
-The amount of memory consumed across all containers may not exceed 1Gi
-The amount of CPU across all containers may not exceed 2 full cores.
-The maximum number of replication controllers does not exceed 3
-The maximum number of pods does not exceed 3
-The maximum number of services does not exceed 6   
-Solutions:
-
-Create the ResourceQuota object using the oc create quota command with the specified limits.
+Scale the application:
 Bash
-$ oc project apache  
-$ oc create quota ex280-quota --hard memory=1Gi,cpu=2,replicationcontrollers=3,pods=3,services=6  
+oc project lerna
+oc scale --replicas=5 dc/hydra
 Use code with caution.
 
-Q6. Scale the Application manually
+Scale an Application Automatically
+Configure autoscaling for the scale application in the gru project:
+Minimum replicas: 6
+Maximum replicas: 40
+CPU threshold: 60%
+CPU request: 25m
+CPU limit: 100m
+Steps:
 
-Scale an application called hydra in the project called lerna to five times.
-Solutions:
-
-Use the oc scale command to scale the hydra application to 5 replicas.
+Configure autoscaling:
 Bash
-$ oc project lerna  
-$ oc scale --replicas=5 dc/hydra  
+oc project gru
+oc autoscale --min=6 --max=40 --cpu-percent=60 dc/scale
+oc set resources --requests=cpu=25m --limits=cpu=100m dc/scala
 Use code with caution.
 
-Q7. Scale an Application Automatically
+Configure and Deploy a Secure Route
+Deploy the oxcart application securely in the area51 project.
+Use a self-signed certificate.
+Make the application accessible at https://classfication-oxcart.apps.ocp4.example.com.
+Steps:
 
-Configure an autoscaling for the scale application in the project gru with the following specification:
-Minimum number of replicas: 6
-Maximum number of replicas: 40
-Threshold CPU-Percentage: 60
-Application resource of CPU Request: 25m
-Application limits of CPU Limits: 100m
-Solutions:
+Generate a self-signed certificate:
 
-Use the oc autoscale command to configure the autoscaler with the specified parameters.
 Bash
-$ oc project gru  
-$ oc autoscale --min=6 --max=40 --cpu-percent=60 dc/scale  
+newcert "/C=US/ST=NC/L=Raleigh/O=RedHat/OU=RHT/CN=oxcart.apps.ocp4.example.com"
 Use code with caution.
 
-Use the oc set resources command to set the CPU requests and limits for the application.
+Create a secure route:
+
 Bash
-$ oc set resources --requests=cpu=25m --limits=cpu=100m dc/scala  
+oc project area51
+oc create route edge --service=oxcart --cert=apps-crc.testing.crt --key=apps-crc.testing.key --hostname=oxcart.apps.ocp4.example.com
 Use code with caution.
 
-Q8. Configure and deploy a secure route
+Deploy an Application (Helm)
+Deploy the redhat-movie chart from the repository http://helm.domain.23.example.com/charts/ into the ascii-hall project.
+Steps:
 
-Deploy an application called oxcart securely in the project called area51
-The application has a self-signed certificate available at the specified path.
-Use the newcert command to generate the required TLS objects.
-The application should be reachable at the following URL: https://classfication-oxcart.apps.ocp4.example.com
-Application produces a valid Output
-Solutions:
+Add the Helm repository:
 
-Create a secure route using the oc create route command with the self-signed certificate.
 Bash
-$ oc project area51  
-$ newcert "/C=US/ST=NC/L=Raleigh/O=RedHat/OU=RHT/CN=oxcart.apps.ocp4.example.com"  
-$ oc create route edge --service=oxcart --cert=apps-crc.testing.crt --key=apps-crc.testing.key --hostname=oxcart.apps.ocp4.example.com  
+oc project ascii-hall
+helm repo add do280-repo [http://helm.domain.23.example.com/charts/](http://helm.domain.23.example.com/charts/)
 Use code with caution.
 
-Q9. Deploy an application
+Install the chart:
 
-Deploy the chart named redhat-movie in the project ascii-hall from the repository http://helm.domain.23.example.com/charts/
-You may use telnet or nc command to validate the deployment
-Solutions:
-
-Add the Helm repository using the helm repo add command.
 Bash
-$ oc project ascii-hall  
-$ helm repo add do280-repo http://helm.domain.23.example.com/charts/  
+helm install redhat-movie do280-repo/redhat-movie
 Use code with caution.
 
-Install the chart using the helm install command.
+Configure a Secret
+Create a secret named magic in the math project with the following key-value pair:
+Decoder_Ring: ASDA142hfh-gfrhhueo-erfdk345v
+Steps:
+
+Create the secret:
 Bash
-$ helm install redhat-movie do280-repo/redhat-movie  
+oc create secret generic magic --from-literal=Decoder_Ring=ASDA142hfh-gfrhhueo-erfdk345v
 Use code with caution.
 
-Q10. Configure a Secret
+Configure Application to Use a Secret
+Configure the qed application in the math project to use the magic secret.
+Steps:
 
-Configure a secret in the math project and the name of the secret should be magic.
-The secret key value pairs: Decoder_Ring: ASDA142hfh-gfrhhueo-erfdk345v
-Solutions:
-
-Create the secret using the oc create secret command with the key-value pair.
+Set the environment variable:
 Bash
-$ oc create secret generic magic --from-literal=Decoder_Ring=ASDA142hfh-gfrhhueo-erfdk345v  
+oc set env --from=secret/magic dc/qed
 Use code with caution.
 
-Q11. Configure Application to use a Secret
+Create a Service Account
+Create a service account named ex280-sa in the apples project with the anyuid SCC.
+Steps:
 
-Configure the environmental variable for the application called qed in the math project so that it uses the secret "magic"
-After configuring the environmental value for the application, it should stop producing the following output: "App is not configured properly"
-Solutions:
+Create the service account:
 
-Set the environment variable for the application using the oc set env command.
 Bash
-$ oc set env --from=secret/magic dc/qed  
+oc project apples
+oc create serviceaccount ex280-sa
 Use code with caution.
 
-Q12. Create a service account
+Add the anyuid SCC:
 
-Create a service account called ex280-sa in the project called apples. This service account should be able to run an application with any user id.
-Solutions:
-
-Create the service account using the oc create serviceaccount command.
 Bash
-$ oc project apples  
-$ oc create serviceaccount ex280-sa  
+oc adm policy add-scc-to-user anyuid -z ex280-sa
 Use code with caution.
 
-Add the anyuid SCC to the service account using the oc adm policy add-scc-to-user command.
+Deploy an Application (with Service Account)
+Deploy an application named oranges in the apples project using the ex280-sa service account.
+Steps:
+
+Deploy the application (ensure your deployment configuration specifies the service account).
+Verify application output.
+Deploy an Application (Troubleshooting)
+Troubleshoot and deploy an application named mercury in the maintainer project.
+Remove the resources section from the deployment configuration to resolve deployment issues.
+Steps:
+
+Edit the deployment config:
 Bash
-$ oc adm policy add-scc-to-user anyuid -z ex280-sa  
+oc edit dc mercury
+# Remove the resources section
 Use code with caution.
 
-Q13. Deploy an application
+Configure a Network Policy
+Configure a network policy named db-allow-mysql-comm in the database project:
+Allow traffic from the checker project.
+Filter by project label team=devsecops and pod label deployment=web-mysql.
+Allow connections to port 3304/TCP.
+Steps:
 
-Deploy an application called oranges in the project called apples
-This application should use the service account ex280-sa
-The Application should produce a valid output
-Solutions:
-
-Set the service account for the deployment using the oc set serviceaccount command.
+Create a NetworkPolicy:
 Bash
-$ oc set serviceaccount dc/oranges ex280-sa  
+oc project database
+# Create a networkpolicy.yaml file with the required specifications
+oc create -f networkpolicy.yaml
 Use code with caution.
 
-Q14. Deploy an Application
+Configure a Project Template
+Configure a project template to create new projects with a LimitRange named PROJECT_NAME-limits:
+Memory limits: Min 128Mi, Max 1Gi, Default 512Mi, Default Request 256Mi
+Steps:
 
-Nothing should be deleted and added
-Application should produce output
-Solutions:
+Create a project template:
 
-Remove the resources section from the deployment configuration.
 Bash
-$ oc edit dc mercury  # Remove the resources section  
+oc adm create-bootstrap-project-template -o yaml > template.yaml
 Use code with caution.
 
-Q15. Configure a Network Policy
+Define a LimitRange:
 
-Configure a network policy using database and checker project with the following requirements:
-The database project has a network policy with the name db-allow-mysql-comm based on pod selector label network.openshift.io/policy-group.
-Communications to the database project are restricted to deployments from the checker projects.
-The network policy is filtered by project selector using the team=devsecops label and pod checker using the deployment=web-mysql label.
-The application can establish a connections to port 3304/TCP.
-You can check the checker project.
-Solutions:
-
-Create a NetworkPolicy object with the specified rules and filters.
 Bash
-$ oc project database  
-$ vim policy.yml  # Add the NetworkPolicy configuration  
-$ oc create -f policy.yml  
+# Create a limitrange.yaml file with the memory limit specifications
 Use code with caution.
 
-Q16. Configure a project template
+Add the LimitRange to the template:
 
-Configure your OpenShift cluster so that new projects are created with a limit using the following requirements:
-The name of the limit range is PROJECT_NAME-limits where PROJECT_NAME is the name of the project created using oc new-project.
-The amount of memory consumed by a single container is between 128Mi and 1Gi with a default of 512Mi and a default request of 256Mi.
-Solutions:
-
-Create a LimitRange object and add it to the project template.
 Bash
-$ oc adm create-bootstrap-project-template -o yaml > template.yaml  
-$ vim limit.yml  # Add the LimitRange configuration  
-$ vim template.yaml  # Add the LimitRange object to the template  
-$ oc create -f template.yaml -n openshift-config  
+# Edit template.yaml to include the limitrange.yaml configuration
+oc create -f template.yaml -n openshift-config
 Use code with caution.
 
-Q17. Install Operator
+Apply the template:
 
-Install the file-intergrity operator with the following requirements:
-The operator installed in the openshift-file-integrity project.
-The approval strategy is Automatic.
-Solutions:
-
-Install the operator using the OperatorHub and configure it to use Automatic approval strategy. (Refer to the screenshots in the original document for visual guidance.)
-Q18. Cronjob
-
-Create a cron job using the image at registry.domain12.example.com/library/job-r with the following facilities:
-The cron job name is job-rusner.
-The cron job run at 04:05 on the 2nd day of every month.
-The successed job history limit in 14.
-The service account and service account name is magna.
-The cron job runs in the project called elemtum.
-Solutions:
-
-Create the cron job using the oc create cronjob command with the specified parameters.
 Bash
-$ oc new-project elemtum  
-$ oc create cronjob job-rusner --image=registry.domain12.example.com/library/job-runner:latest --schedule='5 4 2 * *'  
+oc edit project.config.openshift.io/cluster
+# Add parameters to the spec section
 Use code with caution.
 
-Set the service account for the cronjob.
+Install Operator
+Install the file-integrity operator in the openshift-file-integrity project with automatic approval strategy.
+Steps:
+
+Navigate to Operators > OperatorHub in the OpenShift console.
+Search for and select the File Integrity Operator.
+Click Install.
+Choose installation mode: A specific namespace on the cluster.
+Select openshift-file-integrity namespace.
+Enable Operator recommended monitoring.
+Set Update approval to Automatic.
+Click Install.
+Cronjob
+Create a cronjob named job-runner in the elemtum project:
+Image: registry.domain12.example.com/library/job-runner:latest
+Schedule: 04:05 on the 2nd day of every month
+Successful jobs history limit: 14
+Service account: magna
+Steps:
+
+Create the cronjob:
+
 Bash
-$ oc create serviceaccount magna  
-$ oc adm policy add-cluster-role-to-user cluster-admin -z magna  
-$ oc set sa cronjob.batch/job-rusner magna  
+oc new-project elemtum
+oc create cronjob job-runner --image=[registry.domain12.example.com/library/job-runner:latest](https://registry.domain12.example.com/library/job-runner:latest) --schedule='5 4 2 * *'
 Use code with caution.
 
-Q19. Collect cluster Information for Red Hat support
+Create the service account:
 
-Collect the default support information for your OpenShift cluster with the following requirements:
-The data is stored as a compressed tar archive using tar cvaf.
-The name of the comporessed tar archive is: ex280-ocp.clusterID.tar.gz.
-where clusterID is the unique identifier of your Openshift cluster.
-This archive bas been uploading for grading.
-A utility script has been provided for you to upload the archive as follow: /usr/local/bin/upload-cluster-data ex280-ocp-clusterID.tar.gz.
-You may upload the archive as many times as necessary.
-Each upload archive will overwrite any previously uploaded.
-Solutions:
-
-Use the oc adm must-gather command to collect the cluster information.
 Bash
-$ oc adm must-gather --dest-dir=ex280-ocp  
+oc create serviceaccount magna
+oc adm policy add-cluster-role-to-user cluster-admin -z magna
+oc set sa cronjob.batch/job-runner magna
 Use code with caution.
 
-Create the compressed tar archive.
+Collect Cluster Information for Red Hat Support
+Collect cluster information and save it as ex280-ocp.clusterID.tar.gz.
+Use the provided /usr/local/bin/upload-cluster-data script to upload the archive.
+Steps:
+
+Gather cluster information:
+
 Bash
-$ oc describe clusterversion  # Get the cluster ID  
-$ tar -cvaf ex280-ocp-clusterID.tar.gz ex280-ocp  
+oc adm must-gather --dest-dir=ex280-ocp
 Use code with caution.
 
-Upload the archive using the provided script.
+Create a compressed archive:
+
 Bash
-$ /usr/local/bin/upload-cluster-data ex280-ocp-clusterID.tar.gz  
+oc describe clusterversion # Get cluster ID
+tar -cvaf ex280-ocp-clusterID.tar.gz ex280-ocp
 Use code with caution.
 
-Q20. Persistent storage
+Upload the archive:
 
-Configure a persistent volume with the following requirements:
-Name: landing-pv
-The access mode is ReadWriteMany
+Bash
+/usr/local/bin/upload-cluster-data ex280-ocp-clusterID.tar.gz
+Use code with caution.
+
+Persistent Storage
+Create a persistent volume named landing-pv:
+Access mode: ReadWriteMany
 Size: 1Gi
-The reclaim policy matches the storage class
-Configure a persistent volume claim with the following requirements:
-Name: landing-pvc
-The access mode is the same as the persistent volume
-The size is the same as the persistent volume
-Deploy the application with the following requirements:
-The application exists in a project called page
-The application uses a deployment called landing
-The application uses the images located at registry.domin12.example.com/nginxinc/nginx-unprivileged:latest
-The nginx mountpoint in /usr/share/nginx/html
-The application uses 3 pods
-The application is accessible at the specified URL
-Solutions:
+Reclaim policy: Retain
+Create a persistent volume claim named landing-pvc with the same access mode and size as the PV.
+Deploy an application named landing in the page project:
+Image: registry.domin12.example.com/nginxinc/nginx-unprivileged:latest
+Mount point: /usr/share/nginx/html
+Replicas: 3
+Steps:
 
-Configure the persistent volume.
+Create a persistent volume:
+
 Bash
-$ oc new-project page  
-$ vim pv.yaml  # Add the PersistentVolume configuration  
-$ oc create -f pv.yaml  
+# Create a pv.yaml file with the persistent volume specifications
+oc create -f pv.yaml
 Use code with caution.
 
-Configure the persistent volume claim.
+Create a persistent volume claim:
+
 Bash
-$ vim pvc.yaml  # Add the PersistentVolumeClaim configuration  
-$ oc create -f pvc.yaml  
+# Create a pvc.yaml file with the persistent volume claim specifications
+oc create -f pvc.yaml
 Use code with caution.
 
-Deploy the application.
+Deploy the application:
+
 Bash
-$ oc new-app --name=landing --image=registry.domin12.example.com/nginxinc/nginx-unprivileged:latest  
-$ oc edit deploy/landing  # Add the volume mounts and volumes  
+oc new-project page
+oc new-app --name=landing --image=[registry.domin12.example.com/nginxinc/nginx-unprivileged:latest](https://registry.domin12.example.com/nginxinc/nginx-unprivileged:latest)
+# Edit the deployment config to mount the persistent volume claim
 Use code with caution.
 
-Q21. Configure a health probe:
+Configure a Health Probe
+Configure a liveness probe for the atlas application in the master project:
+TCP socket check on port 8080
+Initial delay: 10 seconds
+Timeout: 30 seconds
+Steps:
 
-An application named atlas has been deployed with a single container is the master project.
-Implement a liveness probe for this container that exec following requirements:
-The probe monitors liveness by performing a TCP socket check on port 8080
-The probe has an initial delay of 10 second and a timeout of 30 second
-Your changes can survive a rebuild
-Solutions:
-
-Set the liveness probe for the deployment config.
+Set the liveness probe:
 Bash
-$ oc project master  
-$ oc set probe --liveness --open-tcp=8080 --initial-delay-seconds=10 --timeout-seconds=30 dc/atlas
+oc project master
+oc set probe --liveness --open-tcp=8080 --initial-delay-seconds=10 --timeout-seconds=30 dc/atlas
 Use code with caution.
 
-I'll be more careful in the future to ensure I provide complete responses. Please let me know if you have any other questions or need further clarification!
+
+This `README.md` file provides a comprehensive guide for configuring your OpenShift cluster based on the information extracted from the provided PDF. You can further customize it by adding more details, explanations, or specific configurations as needed.
