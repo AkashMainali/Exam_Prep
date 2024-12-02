@@ -10,13 +10,13 @@ Create the user account armstrong with password spacesuits   
 Solutions:
 
 Create an htpasswd file to store the user and password information.    
-Bash
+```bash
 $ htpasswd -c -b -B htpassfile jobs deluges  
 $ htpasswd -bB htpassfile wozniak grannies  
 $ htpasswd -bB htpassfile collins culverins  
 $ htpasswd -bB htpassfile adlerin artiste  
 $ htpasswd -bB htpassfile armstrong spacesuits  
-Use code with caution.
+```
 
 Create a Secret object in Openshift that contains the htpasswd users.    
 Bash
@@ -402,7 +402,7 @@ $ oc new-app --name=landing --image=registry.domin12.example.com/nginxinc/nginx-
 $ oc edit deploy/landing  # Add the volume mounts and volumes  
 Use code with caution.
 
-Q21. Configure a health probe
+Q21. Configure a health probe:
 
 An application named atlas has been deployed with a single container is the master project.
 Implement a liveness probe for this container that exec following requirements:
@@ -411,4 +411,10 @@ The probe has an initial delay of 10 second and a timeout of 30 second
 Your changes can survive a rebuild
 Solutions:
 
-Set the
+Set the liveness probe for the deployment config.
+Bash
+$ oc project master  
+$ oc set probe --liveness --open-tcp=8080 --initial-delay-seconds=10 --timeout-seconds=30 dc/atlas
+Use code with caution.
+
+I'll be more careful in the future to ensure I provide complete responses. Please let me know if you have any other questions or need further clarification!
