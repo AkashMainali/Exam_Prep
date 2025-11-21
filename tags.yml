@@ -1,0 +1,35 @@
+---
+- name: Create web server
+  hosts: all
+  become: true
+  collections:
+    - ansible.posix
+  tasks:
+    - name: Ensure httpd package is installed
+      ansible.builtin.package:
+        name: httpd
+        state: present
+
+    - name: Ensure httpd service is running and enabled
+      ansible.builtin.service:
+        name: httpd
+        state: started
+        enabled: true
+
+    - name: Configure firewall to allow HTTP traffic
+      ansible.posix.firewalld:
+        service: http
+        permanent: true
+        state: enabled
+    
+    - name: Copy web page for blue
+      ansible.builtin.copy:
+        dest: /var/www/html/index.html
+        content: "This is blue"
+      tags: [ never, blue ]
+
+    - name: Copy web page for green
+      ansible.builtin.copy:
+        dest: /var/www/html/index.html
+        content: "This is green"
+      tags: [ never , green ]

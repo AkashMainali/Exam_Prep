@@ -1,0 +1,19 @@
+---
+- name: Create web server
+  hosts: all
+  become: true
+  collections:
+    - ansible.posix
+  tasks:
+    - name: Change web content
+      ansible.builtin.copy:
+        dest: /var/www/html/index.html
+        content: "content changed"
+      notify: restart httpd
+
+  handlers:
+    - name: restart httpd
+      ansible.builtin.service:
+        name: httpd
+        state: restarted
+        enabled: true

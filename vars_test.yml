@@ -1,0 +1,24 @@
+---
+- name: Test variables
+  hosts: all
+  become: true
+  vars:
+    CONTENT: "This is test"
+    FILE: ansible_test
+    DIRECTORY: /tmp/ansible/
+  tasks:
+    - name: Create directory
+      ansible.builtin.file:
+        path: "{{ DIRECTORY }}"
+        state: directory
+
+    - name: Create file
+      ansible.builtin.file:
+        path: "{{DIRECTORY}}/{{FILE}}"
+        state: touch
+
+    - name: Add content to file
+      ansible.builtin.copy:
+        dest: "{{DIRECTORY}}/{{FILE}}"
+        content: "{{CONTENT}}"
+
