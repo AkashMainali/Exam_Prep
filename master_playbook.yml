@@ -1,0 +1,18 @@
+---
+- hosts: Create web content
+  become: true
+  tasks:
+    - name: Create Directory
+      ansible.builtin.file:
+        dest: "{{ DIRECTORY }}"
+        state: directory
+
+    - name: Create file
+      ansible.builtin.file:
+        dest: "{{ DIRECTORY }}/{{ FILE }}"
+        state: touch
+
+    - name: Add Content to file
+      ansible.builtin.copy:
+        dest: "{{ DIRECTORY }}/{{ FIL E}}"
+        content: "{{ CONTENT }}"
