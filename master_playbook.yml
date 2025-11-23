@@ -15,5 +15,5 @@
 
     - name: Add Content to file
       ansible.builtin.copy:
-        dest: "{{ DIRECTORY }}/{{ FIL E}}"
+        dest: "{{ DIRECTORY }}/{{ FILE}}"
         content: "{{ CONTENT }}"
