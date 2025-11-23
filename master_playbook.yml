@@ -17,4 +17,3 @@
       ansible.builtin.copy:
         dest: "{{DIRECTORY}}/{{FILE}}"
         content: "{{CONTENT}}"
-        create: true
