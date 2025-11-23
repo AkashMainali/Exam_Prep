@@ -1,7 +1,6 @@
 ---
 - hosts: all
   name: Create file and directory
-  become_user: ansible
   become: true
   tasks:
     - name: Create Directory
