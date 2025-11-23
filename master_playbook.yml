@@ -12,6 +12,8 @@
       ansible.builtin.file:
         dest: "{{ DIRECTORY }}/{{ FILE }}"
         state: touch
+        owner: root
+        group: root
 
     - name: Add Content to file
       ansible.builtin.copy:
