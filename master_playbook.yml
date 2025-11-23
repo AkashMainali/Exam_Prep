@@ -1,7 +1,7 @@
 ---
 - hosts: all
   name: Create file and directory
-  become: true
+    #  become: true
   tasks:
     - name: Create Directory
       ansible.builtin.file:
@@ -12,8 +12,6 @@
       ansible.builtin.file:
         dest: "{{ DIRECTORY }}/{{ FILE }}"
         state: touch
-        owner: root
-        group: root
 
     - name: Add Content to file
       ansible.builtin.copy:
