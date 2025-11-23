@@ -1,0 +1,7 @@
+---
+- hosts: all
+  name: Create RHEL users
+  collections:
+    - rhel.user
+  roles:
+    - rhel.user.newuser
