@@ -8,12 +8,13 @@
         dest: "{{ DIRECTORY }}"
         state: directory
 
-          #    - name: Create file
-          #      ansible.builtin.file:
-          #        dest: "{{ DIRECTORY }}/{{ FILE }}"
-          #        state: touch
+    - name: Create file
+      ansible.builtin.file:
+         dest: "{{ DIRECTORY }}/{{ FILE }}"
+         state: touch
 
     - name: Add Content to file
       ansible.builtin.copy:
-        dest: "{{ DIRECTORY }}/{{ FILE}}"
-        content: "{{ CONTENT }}"
+        dest: "{{DIRECTORY}}/{{FILE}}"
+        content: "{{CONTENT}}"
+        create: true
