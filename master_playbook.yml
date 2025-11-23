@@ -1,0 +1,19 @@
+---
+- name: Master Playbook
+  hosts: all
+  become: true
+  tasks:
+    - name: Create Directory
+      ansible.builtin.file:
+        path: "{{ DIRECTORY }}"
+        state: directory
+
+    - name: Crate File
+      ansible.builtin.file:
+        path: "{{DIRECTORY}}/{{FILE}}"
+        state: touch
+
+    - name: Add content to file
+      ansible.builtin.copy:
+        dest: "{{DIRECTORY}}/{{FILE}}"
+        content: "{{CONTENT}}"
