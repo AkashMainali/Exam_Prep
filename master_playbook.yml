@@ -1,5 +1,6 @@
 ---
-- hosts: Create web content
+- hosts: all
+  name: Create file and directory
   become: true
   tasks:
     - name: Create Directory
