@@ -18,8 +18,3 @@ users:
     middle: lary
     last: Johnson
 
-  - name: john
-    uid: 1055
-    first: John 
-    middle: willow
-    last: Lance

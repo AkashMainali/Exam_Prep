@@ -1,15 +1,15 @@
 ---
-- hosts: all
-  name: change content
+- name: Change web content
+  hosts: all
   become: true
   tasks:
-    - name: Change to first content
+    - name: First task
       ansible.builtin.copy:
         dest: /var/www/html/index.html
-        content: "This is blue"
+        content: "Blue"
       tags: [never,blue]
-    - name: Change to second content
+    - name: Second task
       ansible.builtin.copy:
         dest: /var/www/html/index.html
-        content: "This is green"
+        content: "Green"
       tags: [never,green]

@@ -1,7 +1,8 @@
 ---
-- hosts: all
-  name: Create RHEL users
+- name: Create RHEL User
+  hosts: all
   collections:
     - rhel.user
+  become: true
   roles:
     - rhel.user.newuser

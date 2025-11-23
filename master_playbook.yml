@@ -7,13 +7,11 @@
       ansible.builtin.file:
         path: "{{ DIRECTORY }}"
         state: directory
-
-    - name: Crate File
+    - name: Create file:
       ansible.builtin.file:
         path: "{{DIRECTORY}}/{{FILE}}"
         state: touch
-
-    - name: Add content to file
-      ansible.builtin.copy:
+    - name: Add content
+      ansible.builtin.conpy:
         dest: "{{DIRECTORY}}/{{FILE}}"
         content: "{{CONTENT}}"

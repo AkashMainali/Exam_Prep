@@ -1,0 +1,16 @@
+---
+# tasks file for newuser
+- name: Ensure the 'newuser' user exists
+  ansible.builtin.user:
+        name: newuser # The username to create
+        comment: "New User Account" # Optional: a description for the user
+        uid: 1001 # Optional: specific UID for the user
+        group: users # Optional: primary group for the user
+        groups: wheel,developers # Optional: secondary groups for the user (comma-separated)
+        password: "{{ 'your_secure_password_hash' }}" # Required: hashed password for the user
+        shell: /bin/bash # Optional: default shell for the user
+        home: /home/newuser # Optional: home directory path
+        state: present # Ensures the user exists
+        create_home: yes # Ensures the home directory is created if it doesn't exist
+
+

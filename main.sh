@@ -1,1 +1,1 @@
-ansible-playbook -i inventory main.yml -K
+ansible-playbook main.yml -i inventory -K

@@ -1,13 +1,13 @@
 ---
 - hosts: all
-  name: Change the web server content
+  become: true
+  name: Alias
   tasks:
-    - name: Change the content of web server
+    - name: Change content 
       ansible.builtin.copy:
         dest: /var/www/html/index.html
-        content: "Changed content by ansible"
+        content: "Content changed"
       notify: restart httpd
-
   handlers:
     - name: restart httpd
       ansible.builtin.service:

@@ -2,7 +2,7 @@
 version: 3
 
 images:
-  base_image: 
+  base_image:
     name: 192.168.124.24/ee-minimal-rhel8:latest
 
 dependencies:
@@ -11,3 +11,4 @@ dependencies:
 
 options:
   package_manager_path: /usr/bin/microdnf
+

@@ -1,9 +1,9 @@
 ---
-- hosts: all
+- name: Change the banner content
+  hosts: all
   become: true
-  name: Change Banner Content
   tasks:
-    - name: Change the content
+    - name: Change Banner content
       ansible.builtin.copy:
         dest: /etc/motd.d/banner
-        content: "Sun set down in ease"
+        content: "Sun set down in east"

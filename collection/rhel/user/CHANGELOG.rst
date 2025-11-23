@@ -7,7 +7,3 @@ Rhel.User Release Notes
 v1.0.0
 ======
 
-Release Summary
----------------
-
-Test Release 2
