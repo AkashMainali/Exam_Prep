@@ -1,17 +1,17 @@
 ---
-- name: Master Playbook
+- name: Create content
   hosts: all
   become: true
   tasks:
-    - name: Create Directory
+    - name: Create directory
       ansible.builtin.file:
         path: "{{ DIRECTORY }}"
         state: directory
-    - name: Create file
+    - name: Create file inside directory
       ansible.builtin.file:
         path: "{{DIRECTORY}}/{{FILE}}"
         state: touch
-    - name: Add content
-      ansible.builtin.copy:
+    - name: Add content to file
+      ansible.builtin.copu:
         dest: "{{DIRECTORY}}/{{FILE}}"
         content: "{{CONTENT}}"

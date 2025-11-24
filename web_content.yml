@@ -1,15 +1,15 @@
 ---
-- name: Change web content
+- name: Manage web content
   hosts: all
   become: true
   tasks:
     - name: First task
-      ansible.builtin.copy:
-        dest: /var/www/html/index.html
-        content: "Blue"
       tags: [never,blue]
-    - name: Second task
       ansible.builtin.copy:
         dest: /var/www/html/index.html
-        content: "Green"
+        content: "This is Blue"
+    - name: Second task
       tags: [never,green]
+      ansible.builtin.copy:
+        dest: /var/www/html/index.html
+        content: "This is green"
