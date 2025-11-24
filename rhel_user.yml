@@ -1,8 +1,0 @@
----
-- hosts: all
-  name: Create rhel user
-  become: true
-  collections:
-    - rhel.user
-  roles:
-    - rhel.user.newuser

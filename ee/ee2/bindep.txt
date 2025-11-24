@@ -1,2 +1,0 @@
-python36
-python==3.6
