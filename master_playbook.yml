@@ -12,6 +12,6 @@
         path: "{{DIRECTORY}}/{{FILE}}"
         state: touch
     - name: Add content
-      ansible.builtin.conpy:
+      ansible.builtin.copy:
         dest: "{{DIRECTORY}}/{{FILE}}"
         content: "{{CONTENT}}"
