@@ -1,0 +1,18 @@
+---
+- host: all
+  name: Change content
+  become: true
+  tasks:
+    - name: Create Directory
+      ansible.builtin.file:
+        state: directory
+        path: "{{ DIRECTORY }}"
+    - name: Create file
+      ansible.builtin.file:
+        state: touch
+        path: "{{DIRECTORY}}/{{FILE}}"
+    - name: Add content to file
+      ansible.builtin.copy:
+        dest: "{{DIRECTORY}}/{{FILE}}"
+        content: "{{CONTENT}}
+

@@ -1,0 +1,15 @@
+---
+- hosts: all
+  name: Alias playbook
+  become: true
+  tasks:
+    - name: Change the web Content
+      ansible.builtin.copy:
+        dest: /var/www/html/index.html
+        content: "Content has been changd"
+      notify: restart httpd
+  handlers:
+    - name: restart httpd
+      ansible.builtin.service:
+        name: httpd
+        state: restarted

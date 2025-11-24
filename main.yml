@@ -1,0 +1,9 @@
+---
+- name: main.yml playbook
+  hosts: all
+  become: true
+  tasks:
+    - name: Change the banner
+      ansible.builtin.copy:
+        dest: /etc/motd.d/banner
+        content: "Sun set down in east"

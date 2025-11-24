@@ -1,0 +1,8 @@
+---
+- hosts: testing
+  become: true
+  name: Creat RHEL user
+  collections:
+    - rhel.user
+  roles:
+    - rhel.user.newuser

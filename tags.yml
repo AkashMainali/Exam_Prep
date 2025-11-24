@@ -1,0 +1,15 @@
+--- 
+- hosts: all
+  become: true
+  name: Working on tags
+  tasks:
+    - name: First task
+      ansible.builtin.copy:
+        dest: /var/www/html/index.html
+        content: "This is blue"
+      tags: [never,blue]
+    - name: Second task
+      ansible.builtin.copy:
+        dest: /var/www/html/index.html
+        content: "This is green"
+      tags: [never,green]
