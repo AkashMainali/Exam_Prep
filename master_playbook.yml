@@ -1,5 +1,5 @@
 ---
-- host: all
+- hosts: all
   name: Change content
   become: true
   tasks:
@@ -14,5 +14,5 @@
     - name: Add content to file
       ansible.builtin.copy:
         dest: "{{DIRECTORY}}/{{FILE}}"
-        content: "{{CONTENT}}
+        content: "{{CONTENT}}"
 
