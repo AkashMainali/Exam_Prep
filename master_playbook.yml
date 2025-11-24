@@ -7,7 +7,7 @@
       ansible.builtin.file:
         path: "{{ DIRECTORY }}"
         state: directory
-    - name: Create file:
+    - name: Create file
       ansible.builtin.file:
         path: "{{DIRECTORY}}/{{FILE}}"
         state: touch
